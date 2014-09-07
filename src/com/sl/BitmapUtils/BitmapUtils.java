@@ -1,4 +1,4 @@
-package com.StephenLee.Bitmap;
+package com.sl.BitmapUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

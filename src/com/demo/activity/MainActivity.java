@@ -1,10 +1,12 @@
-package com.example.bitmaptest;
+package com.demo.activity;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.example.bitmaptest.R;
 
 import android.app.Activity;
 import android.graphics.Bitmap;
