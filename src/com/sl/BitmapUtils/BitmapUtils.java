@@ -8,18 +8,55 @@ import java.io.InputStream;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Point;
 
 /**
- * @descrption Í¼Æ¬·ş¸¨ÖúÀà. Ö÷Òª¸ºÔğÍ¼Æ¬´´½¨,Í¼Æ¬Ëõ·Å£¬Í¼Æ¬Ñ¹Ëõ,Í¼Æ¬²Ã¼ô£¬»ñÈ¡Í¼Æ¬ĞÅÏ¢,ÀàĞÍ×ª»»µÈ²Ù×÷
+ * @descrption
  * 
  * @author Stephen
  */
 public class BitmapUtils {
+	/**
+	 * ä½¿ç”¨æŒ‡å®šçš„å®½é«˜åˆ›å»ºBitmap
+	 * 
+	 * å¯¹æ­¤å›¾ç‰‡è¿›è¡Œé€‚å½“çš„ç¼©æ”¾å¤„ç†
+	 * 
+	 * @param res
+	 * @param resId
+	 * @param w
+	 * @param h
+	 * @return
+	 */
+	public static Bitmap createBitmapByCertainSpec(Resources res, int resId,
+			int w, int h) {
+		BitmapFactory.Options options = new BitmapFactory.Options();
+
+		// å…ˆè§£ç å›¾ç‰‡çš„è¾¹æ¡†ï¼Œè€Œéæ•´å¼ å›¾ç‰‡ï¼Œä»è€Œå¯ä»¥å¾—åˆ°å›¾ç‰‡çš„å®½é«˜
+		options.inJustDecodeBounds = true;
+		BitmapFactory.decodeResource(res, resId, options);
+		options.inJustDecodeBounds = false;
+		options.inTempStorage = new byte[1024];
+
+		// æ­¤æ—¶optionså·²ç»å¾—åˆ°äº†resIdå¯¹äºå›¾ç‰‡çš„å°ºå¯¸
+		// è®¡ç®—isSampleSize
+		options.inSampleSize = computeSampleSize(options, -1, w * h);
+		options.inPurgeable = true;
+		options.inInputShareable = true;
+		options.inDither = false;
+		options.inPurgeable = true;
+
+		Bitmap sourceBitmap = null;
+		try {
+			sourceBitmap = BitmapFactory.decodeResource(res, resId, options);
+		} catch (OutOfMemoryError e) {
+			e.printStackTrace();
+		}
+
+		return sourceBitmap;
+	}
 
 	/**
-	 * @descrption Í¨¹ıInputStream´´½¨Bitmap.
-	 *             Ê¹ÓÃBitmapFactory.decodeStream·½·¨´´½¨Bitmap£¬Ã»ÓĞoption²ÎÊı£¬ËùÒÔ´´½¨µÄBitmap
-	 *             µÄwidthºÍheightÎªÔ­Í¼µÄ³ß´ç
+	 * @descrption åˆ›å»ºåŸå§‹å°ºå¯¸å›¾
 	 * 
 	 * @note
 	 * 
@@ -48,9 +85,63 @@ public class BitmapUtils {
 	}
 
 	/**
-	 * @descrption Bitmap×ªbytes
+	 * è·å–Bitmapæ‰€å å†…å­˜å¤§å°ï¼Œå•ä½ä¸ºbyte
 	 * 
-	 * @note ¿ÉÒÔÊ¹ÓÃ´Ë·½·¨°ÑBitmap×ª³Ébytes£¬bytes.lengthÔòÎª´¦ÀíºóµÄBitmapËùÕ¼ÄÚ´æ´óĞ¡
+	 * @param bitmap
+	 * @return
+	 */
+	public static int getBitmapSizeInMemery(Bitmap bitmap) {
+		int result = 0;
+		if (null == bitmap)
+			return result;
+		return bitmap.getByteCount();
+	}
+
+	/**
+	 * è·å–å›¾ç‰‡çš„å®é™…å®½é«˜
+	 * 
+	 * @param res
+	 * @param resId
+	 * @return Pointå¯¹è±¡ï¼Œxè¡¨ç¤ºå®½ï¼Œyè¡¨ç¤ºé«˜
+	 */
+	public static Point getBitmapWidthAndHeight(Resources res, int resId) {
+		BitmapFactory.Options options = new BitmapFactory.Options();
+		// å…ˆè§£ç å›¾ç‰‡çš„è¾¹æ¡†ï¼Œè€Œéæ•´å¼ å›¾ç‰‡ï¼Œä»è€Œå¯ä»¥å¾—åˆ°å›¾ç‰‡çš„å®½é«˜
+		options.inJustDecodeBounds = true;
+		BitmapFactory.decodeResource(res, resId, options);
+		return new Point(options.outWidth, options.outHeight);
+	}
+
+	/**
+	 * æ ¹æ®è®¾è®¡åŸºå‡†å°ºå¯¸ï¼Œè·å–å½“å‰è®¾å¤‡ä¸‹ï¼Œç›®æ ‡å›¾ç‰‡çš„æ­£ç¡®ç¼©æ”¾å°ºå¯¸
+	 * 
+	 * @param res
+	 *            Resource , ç”¨äºè·å–å½“å‰è®¾å¤‡çš„å±å¹•å°ºå¯¸
+	 * @param resId
+	 *            å›¾ç‰‡èµ„æºid
+	 * @param compareWith
+	 *            è®¾è®¡å›¾åŸºå‡†å®½,é€šå¸¸æ˜¯720
+	 * @param compareHeight
+	 *            è®¾è®¡å›¾åŸºå‡†é«˜,é€šå¸¸æ˜¯1280
+	 * @return ç›®æ ‡å›¾ç‰‡åœ¨å½“å‰è®¾å¤‡ä¸‹çš„æ­£ç¡®ç¼©æ”¾å°ºå¯¸
+	 */
+	public static Point getBitmapWidthHeightByReferentSzie(Resources res,
+			int resId, int compareWith, int compareHeight) {
+		Point resultSize = new Point();
+		Point targetImageSize = getBitmapWidthAndHeight(res, resId);
+		int screenWidth = res.getDisplayMetrics().widthPixels;
+		int screenHeight = res.getDisplayMetrics().heightPixels;
+		float scaleRateOfWidth = screenWidth / compareWith;
+		float scaleRateOfHeight = screenHeight / compareHeight;
+		int scaledImgWidth = (int) (targetImageSize.x * scaleRateOfWidth);
+		int scaledImgHeight = (int) (targetImageSize.y * scaleRateOfHeight);
+		resultSize.x = scaledImgWidth;
+		resultSize.y = scaledImgHeight;
+		return resultSize;
+	}
+
+	/**
+	 * Bitmapè½¬Bytes
 	 * 
 	 * @param btimap
 	 * @return
@@ -62,19 +153,61 @@ public class BitmapUtils {
 	}
 
 	/**
-	 * @descrption Ñ¹ËõÍ¼Æ¬
+	 * å‹ç¼©å›¾ç‰‡è´¨é‡
 	 * 
-	 * @note Ñ¹ËõÍ¼Æ¬¿ÉÒÔ¼õÉÙÍ¼Æ¬ËùÕ¼ÄÚ´æ£¬µ«ÊÇÑ¹ËõÍ¼Æ¬ÊÇÒ»¸öºÄÊ±²Ù×÷£¬Èç¹ûÍ¼Æ¬ÏñËØµãÌ«¶à£¬¿ÉÄÜ»áÓĞºÜÃ÷ÏÔµÄÑÓ³Ù
-	 * 
-	 * @param image
+	 * @param bitmap
+	 * @param quality
 	 * @return
 	 */
 	public static Bitmap compressBitmap(Bitmap bitmap, int quality) {
 		Bitmap resultBitmap = null;
 		ByteArrayOutputStream outStream = new ByteArrayOutputStream();
 		bitmap.compress(Bitmap.CompressFormat.JPEG, quality, outStream);
-		ByteArrayInputStream isBm = new ByteArrayInputStream(outStream.toByteArray());
+		ByteArrayInputStream isBm = new ByteArrayInputStream(
+				outStream.toByteArray());
 		resultBitmap = BitmapFactory.decodeStream(isBm, null, null);
 		return resultBitmap;
+	}
+
+	// ------ private ------
+	public static int computeSampleSize(BitmapFactory.Options options,
+			int minSideLength, int maxNumOfPixels) {
+		int initialSize = computeInitialSampleSize(options, minSideLength,
+				maxNumOfPixels);
+
+		int roundedSize;
+		if (initialSize <= 8) {
+			roundedSize = 1;
+			while (roundedSize < initialSize) {
+				roundedSize <<= 1;
+			}
+		} else {
+			roundedSize = (initialSize + 7) / 8 * 8;
+		}
+
+		return roundedSize;
+	}
+
+	private static int computeInitialSampleSize(BitmapFactory.Options options,
+			int minSideLength, int maxNumOfPixels) {
+		double w = options.outWidth;
+		double h = options.outHeight;
+
+		int lowerBound = (maxNumOfPixels == -1) ? 1 : (int) Math.ceil(Math
+				.sqrt(w * h / maxNumOfPixels));
+		int upperBound = (minSideLength == -1) ? 128 : (int) Math.min(
+				Math.floor(w / minSideLength), Math.floor(h / minSideLength));
+
+		if (upperBound < lowerBound) {
+			return lowerBound;
+		}
+
+		if ((maxNumOfPixels == -1) && (minSideLength == -1)) {
+			return 1;
+		} else if (minSideLength == -1) {
+			return lowerBound;
+		} else {
+			return upperBound;
+		}
 	}
 }
